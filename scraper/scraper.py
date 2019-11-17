@@ -3,7 +3,7 @@ from urllib.request import urlopen as req
 
 
 # csv to save data to
-filename = 'dataset/car_prices.csv'
+filename = '../dataset/car_prices.csv'
 file = open(filename, 'w')
 
 headers = 'brand, model, year, mileage, price, fee per month\n'
