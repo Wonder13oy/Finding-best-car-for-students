@@ -6,41 +6,46 @@ from urllib.request import urlopen as req
 filename = '../dataset/car_prices.csv'
 file = open(filename, 'w')
 
-headers = 'brand, model, year, mileage, price, fee per month\n'
+headers = 'brand,year,mileage,price,fee per month\n'
 file.write(headers)
 
-for i in range(13):
+def price_to_number(price):
+    return float(price.strip('R').replace(" ",""))
 
-    my_url = f'https://www.imperialauto.co.za/search?pricefrom=0&priceto=200000&page={i+1}&keywords=&used=true&new=true&demo=true&petrol=false&diesel=false&pricedtogo=false&manual=false&automatic=false&yearfrom=2002&yearto=2019&monthlyrepaymentfrom=0&monthlyrepaymentto=3500&mileagefrom=0&mileageto=0&showmakeslider=false&firstload=true&colour=&vehicle_value=r0+-+r200000&est_monthly_repayment=r0+-+r3500&vehicle_value=r0+-+r200000&est_monthly_repayment=r0+-+r3500&vehicle_value=r0+-+r200000&est_monthly_repayment=r0+-+r3500&vehicles_type_filter=used&vehicles_type_filter=demo&resultsperpage=60&sortby=pricelow'
+def scrape():
 
-    # connection
-    client = req(my_url)
-    page_html = client.read()
-    client.close()
+    for i in range(13):
 
-    # html parser
-    page_soup = soup(page_html, 'html.parser')
+        my_url = f'https://www.imperialauto.co.za/search?pricefrom=0&priceto=200000&page={i+1}&keywords=&used=true&new=true&demo=true&petrol=false&diesel=false&pricedtogo=false&manual=false&automatic=false&yearfrom=2002&yearto=2019&monthlyrepaymentfrom=0&monthlyrepaymentto=3500&mileagefrom=0&mileageto=0&showmakeslider=false&firstload=true&colour=&vehicle_value=r0+-+r200000&est_monthly_repayment=r0+-+r3500&vehicle_value=r0+-+r200000&est_monthly_repayment=r0+-+r3500&vehicle_value=r0+-+r200000&est_monthly_repayment=r0+-+r3500&vehicles_type_filter=used&vehicles_type_filter=demo&resultsperpage=60&sortby=pricelow'
 
-    # getting each car
-    containers = page_soup.findAll('div', {"class": "vehicle-container"})
+        # connection
+        client = req(my_url)
+        page_html = client.read()
+        client.close()
 
-    for container in containers:
-        brand_name = container.h3.text.split(' ')
-        brand = brand_name[0]
-        model = brand_name[1]
-        price = container.find('div', {"class": "now"}).text
+        # html parser
+        page_soup = soup(page_html, 'html.parser')
 
-        if container.span == None:
-            continue
-            
-        mileage_year =  container.span.text.split('|')
-        year = mileage_year[0]
-        mileage = mileage_year[1]
-        
-        fee_pm =  container.find('div', {"class": "per-month-value"}).text
+        # getting each car
+        containers = page_soup.findAll('div', {"class": "vehicle-container"})
 
-        file.write(f'{brand}, {year},{mileage}, {price},{fee_pm}\n')
+        for container in containers:
+            brand_name = container.h3.text.split(' ')
+            brand = brand_name[0]
+            price = price_to_number(container.find('div', {"class": "now"}).text)
 
-    print(i+1)
+            if container.span == None:
+                continue
 
-file.close()
+            mileage_year =  container.span.text.split('|')
+
+            year = mileage_year[0]
+            mileage = int(mileage_year[1].strip('Km'))
+
+            fee_pm =  price_to_number(container.find('div', {"class": "per-month-value"}).text)
+
+            file.write(f'{brand}, {year}, {mileage}, {price},{fee_pm}\n')
+
+        print(i+1)
+
+    file.close()
